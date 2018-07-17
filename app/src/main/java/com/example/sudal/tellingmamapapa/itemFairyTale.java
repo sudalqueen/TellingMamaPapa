@@ -6,13 +6,25 @@ public class itemFairyTale {
     private Drawable image;
     private String title;
     private String explane;
+    private int itemViewType;
+
+    public itemFairyTale(){
+
+    }
 
     public itemFairyTale(Drawable image, String title) {
         this.image = image;
         this.title = title;
     }
 
-    public itemFairyTale(Drawable image, String title, String explane) {
+    public itemFairyTale(int itemViewType, Drawable image, String title) {
+        this.itemViewType =itemViewType;
+        this.image = image;
+        this.title = title;
+    }
+
+    public itemFairyTale(int itemViewType, Drawable image, String title, String explane) {
+        this.itemViewType = itemViewType;
         this.image = image;
         this.title = title;
         this.explane = explane;
@@ -40,5 +52,13 @@ public class itemFairyTale {
 
     public void setExplane(String explane) {
         this.explane = explane;
+    }
+
+    public void setItemViewType(int itemViewType){
+        this.itemViewType = itemViewType;
+    }
+
+    public int getItemViewType() {
+        return itemViewType;
     }
 }

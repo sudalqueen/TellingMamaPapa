@@ -1,8 +1,13 @@
 package com.example.sudal.tellingmamapapa;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -19,57 +24,201 @@ import com.nhn.android.naverlogin.OAuthLogin;
 import com.nhn.android.naverlogin.OAuthLoginHandler;
 import com.nhn.android.naverlogin.ui.view.OAuthLoginButton;
 
+import org.json.JSONObject;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserFactory;
+
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
+
 import static com.nhn.android.naverlogin.OAuthLogin.mOAuthLoginHandler;
 
-public class LoginActivity extends AppCompatActivity{
+public class LoginActivity extends AppCompatActivity {
     SessionCallback callback;
 
     OAuthLogin mOAuthLoginModule;
     OAuthLoginButton authLoginButton;
-    Context mContext;
+    Context mActivity;
+    public static OAuthLogin        mOAuthLoginInstance;
+    public Map<String,String>       mUserInfoMap;
+    String TAG = "TAG";
+
+    SharedPreferences sp;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+        mActivity = this;
+
+        sp = getSharedPreferences("login", Activity.MODE_PRIVATE);
 
         callback = new SessionCallback();
         Session.getCurrentSession().addCallback(callback);
 
         authLoginButton = (OAuthLoginButton) findViewById(R.id.buttonOAuthLoginImg);
-        mOAuthLoginModule = OAuthLogin.getInstance();
-        mOAuthLoginModule.init(
+        mOAuthLoginInstance = OAuthLogin.getInstance();
+        mOAuthLoginInstance.init(
                 LoginActivity.this
-                ,"peui2PNZcPRCZ9EKHrkG"
-                ,"a6J0EyubwY"
-                ,"TellingMamaPapa"
-//,OAUTH_CALLBACK_INTENT
-// SDK 4.1.4 버전부터는 OAUTH_CALLBACK_INTENT변수를 사용하지 않습니다.
-
+                , "peui2PNZcPRCZ9EKHrkG"
+                , "a6J0EyubwY"
+                , "TellingMamaPapa"
         );
-//        if (mOAuthLoginModule.getAccessToken(this) != null) {
-//            startActivity(new Intent(this,AfterActivity.class));
-//        } else {
-//            authLoginButton.setOAuthLoginHandler(mOAuthLoginHandler);
+        authLoginButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mOAuthLoginInstance.startOauthLoginActivity(LoginActivity.this, mOAuthLoginHandler);
+            }
+        });
+
     }
 
+    private  void initNaver(){
+        //Naver Init
+        mOAuthLoginInstance = OAuthLogin.getInstance();
+        mOAuthLoginInstance.init(
+                LoginActivity.this
+                , "peui2PNZcPRCZ9EKHrkG"
+                , "a6J0EyubwY"
+                , "TellingMamaPapa"
+        );
+
+    }
+
+    /**
+     * startOAuthLoginActivity() 호출시 인자로 넘기거나, OAuthLoginButton 에 등록해주면 인증이 종료되는 걸 알 수 있다.
+     */
     private OAuthLoginHandler mOAuthLoginHandler = new OAuthLoginHandler() {
         @Override
         public void run(boolean success) {
             if (success) {
-                final String accessToken = mOAuthLoginModule.getAccessToken(mContext);
-
-                String refreshToken = mOAuthLoginModule.getRefreshToken(mContext);
-                long expiresAt = mOAuthLoginModule.getExpiresAt(mContext);
-                String tokenType = mOAuthLoginModule.getTokenType(mContext);
+                String accessToken = mOAuthLoginInstance.getAccessToken(mActivity);
+                String refreshToken = mOAuthLoginInstance.getRefreshToken(mActivity);
+                long expiresAt = mOAuthLoginInstance.getExpiresAt(mActivity);
+                String tokenType = mOAuthLoginInstance.getTokenType(mActivity);
+                Log.d(TAG,accessToken);
+                Log.d(TAG,refreshToken);
+                Log.d(TAG,String.valueOf(expiresAt));
+                Log.d(TAG,tokenType);
+                Log.d(TAG, mOAuthLoginInstance.getState(mActivity).toString());
+                new RequestApiTask().execute();
             } else {
-                String errorCode = mOAuthLoginModule.getLastErrorCode(mContext).getCode();
-                String errorDesc = mOAuthLoginModule.getLastErrorDesc(mContext);
-                Toast.makeText(mContext, "errorCode:" + errorCode
-                        + ", errorDesc:" + errorDesc, Toast.LENGTH_SHORT).show();
+                String errorCode = mOAuthLoginInstance.getLastErrorCode(mActivity).getCode();
+                String errorDesc = mOAuthLoginInstance.getLastErrorDesc(mActivity);
+                Toast.makeText(mActivity, "errorCode:" + errorCode + ", errorDesc:" + errorDesc, Toast.LENGTH_SHORT).show();
             }
-        }
+        };
     };
+
+
+    private class RequestApiTask extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected void onPreExecute() {
+
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            String url = "https://openapi.naver.com/v1/nid/getUserProfile.xml";
+            String at = mOAuthLoginInstance.getAccessToken(mActivity);
+            mUserInfoMap = requestNaverUserInfo(mOAuthLoginInstance.requestApi(mActivity, at, url));
+            startActivity(new Intent(LoginActivity.this, MainActivity.class));
+            return null;
+        }
+
+        protected void onPostExecute(Void content) {
+            if (mUserInfoMap.get("email") == null) {
+                Toast.makeText(mActivity, "로그인 실패하였습니다.  잠시후 다시 시도해 주세요!!", Toast.LENGTH_SHORT).show();
+            } else {
+                Log.d(TAG, String.valueOf(mUserInfoMap));
+
+            }
+
+        }
+    }
+    private Map<String,String> requestNaverUserInfo(String data) { // xml 파싱
+        String f_array[] = new String[9];
+
+        try {
+            XmlPullParserFactory parserCreator = XmlPullParserFactory
+                    .newInstance();
+            XmlPullParser parser = parserCreator.newPullParser();
+            InputStream input = new ByteArrayInputStream(
+                    data.getBytes("UTF-8"));
+            parser.setInput(input, "UTF-8");
+
+            int parserEvent = parser.getEventType();
+            String tag;
+            boolean inText = false;
+            boolean lastMatTag = false;
+
+            int colIdx = 0;
+
+            while (parserEvent != XmlPullParser.END_DOCUMENT) {
+                switch (parserEvent) {
+                    case XmlPullParser.START_TAG:
+                        tag = parser.getName();
+                        if (tag.compareTo("xml") == 0) {
+                            inText = false;
+                        } else if (tag.compareTo("data") == 0) {
+                            inText = false;
+                        } else if (tag.compareTo("result") == 0) {
+                            inText = false;
+                        } else if (tag.compareTo("resultcode") == 0) {
+                            inText = false;
+                        } else if (tag.compareTo("message") == 0) {
+                            inText = false;
+                        } else if (tag.compareTo("response") == 0) {
+                            inText = false;
+                        } else {
+                            inText = true;
+
+                        }
+                        break;
+                    case XmlPullParser.TEXT:
+                        tag = parser.getName();
+                        if (inText) {
+                            if (parser.getText() == null) {
+                                f_array[colIdx] = "";
+                            } else {
+                                f_array[colIdx] = parser.getText().trim();
+                            }
+
+                            colIdx++;
+                        }
+                        inText = false;
+                        break;
+                    case XmlPullParser.END_TAG:
+                        tag = parser.getName();
+                        inText = false;
+                        break;
+
+                }
+
+                parserEvent = parser.next();
+            }
+        } catch (Exception e) {
+            Log.e("dd", "Error in network call", e);
+        }
+        Map<String,String> resultMap = new HashMap<>();
+        resultMap.put("email"           ,f_array[0]);
+        resultMap.put("nickname"        ,f_array[1]);
+        resultMap.put("enc_id"          ,f_array[2]);
+        resultMap.put("profile_image"   ,f_array[3]);
+        resultMap.put("age"             ,f_array[4]);
+        resultMap.put("gender"          ,f_array[5]);
+        resultMap.put("id"              ,f_array[6]);
+        resultMap.put("name"            ,f_array[7]);
+        resultMap.put("birthday"        ,f_array[8]);
+        return resultMap;
+    }
+
 
     private class SessionCallback implements ISessionCallback {
 
@@ -105,13 +254,13 @@ public class LoginActivity extends AppCompatActivity{
                     //로그인에 성공하면 로그인한 사용자의 일련번호, 닉네임, 이미지url등을 리턴합니다.
                     //사용자 ID는 보안상의 문제로 제공하지 않고 일련번호는 제공합니다.
 
-//                    Log.e("UserProfile", userProfile.toString());
-//                    Log.e("UserProfile", userProfile.getId() + "");
+                    Log.e("UserProfile", userProfile.toString());
+                    Log.e("UserProfile", userProfile.getId() + "");
 
 
                     long number = userProfile.getId();
 
-
+                    startActivity(new Intent(LoginActivity.this, MainActivity.class));
                 }
             });
 
@@ -124,5 +273,4 @@ public class LoginActivity extends AppCompatActivity{
 
         }
     }
-
 }

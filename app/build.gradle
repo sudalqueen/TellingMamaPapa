@@ -30,5 +30,5 @@ dependencies {
     implementation group: project.KAKAO_SDK_GROUP, name: 'usermgmt', version: project.KAKAO_SDK_VERSION
     implementation files('libs/3rdparty_login_library_android_4.1.4.jar')
     //noinspection GradleCompatible
-    implementation 'com.android.support:recyclerview-v7:23.3.0'
+    implementation 'com.android.support:recyclerview-v7:28.+'
 }
