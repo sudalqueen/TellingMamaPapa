@@ -2,8 +2,10 @@ package com.example.sudal.tellingmamapapa;
 
 import android.graphics.drawable.Drawable;
 
-public class itemFairyTale {
-    private Drawable image;
+import java.io.Serializable;
+
+public class itemFairyTale implements Serializable{
+    private int image;
     private String title;
     private String explane;
     private int itemViewType;
@@ -12,29 +14,18 @@ public class itemFairyTale {
 
     }
 
-    public itemFairyTale(Drawable image, String title) {
-        this.image = image;
-        this.title = title;
-    }
-
-    public itemFairyTale(int itemViewType, Drawable image, String title) {
-        this.itemViewType =itemViewType;
-        this.image = image;
-        this.title = title;
-    }
-
-    public itemFairyTale(int itemViewType, Drawable image, String title, String explane) {
-        this.itemViewType = itemViewType;
+    public itemFairyTale(int image, String title, String explane) {
         this.image = image;
         this.title = title;
         this.explane = explane;
     }
 
-    public Drawable getImage() {
+
+    public int getImage() {
         return image;
     }
 
-    public void setImage(Drawable image) {
+    public void setImage(int image) {
         this.image = image;
     }
 

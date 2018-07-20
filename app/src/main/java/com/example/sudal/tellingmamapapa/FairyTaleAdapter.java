@@ -19,6 +19,18 @@ public class FairyTaleAdapter extends RecyclerView.Adapter<FairyTaleAdapter.Item
     public static final int VIEW_BUTTON = 1;
     public static final int VIEW_ITEM = 2;
 
+    //아이템 클릭시 실행 함수
+    private ItemClick itemClick;
+
+    public interface ItemClick {
+        public void onClick(View view,int position);
+    }
+
+    //아이템 클릭시 실행 함수 등록 함수
+    public void setItemClick(ItemClick itemClick) {
+        this.itemClick = itemClick;
+    }
+
     public FairyTaleAdapter(ArrayList<itemFairyTale> itemList) {
         this.itemList = itemList;
     }
@@ -30,10 +42,18 @@ public class FairyTaleAdapter extends RecyclerView.Adapter<FairyTaleAdapter.Item
     }
 
     @Override
-    public void onBindViewHolder(FairyTaleAdapter.ItemViewHolder holder, int position) {
+    public void onBindViewHolder(FairyTaleAdapter.ItemViewHolder holder, final int position) {
         itemFairyTale item = itemList.get(position);
-        holder.img.setImageDrawable(item.getImage());
+        holder.img.setImageResource(item.getImage());
         holder.title.setText(item.getTitle());
+        holder.itemView.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v){
+                if(itemClick != null){
+                    itemClick.onClick(v,position);
+                }
+            }
+        });
     }
 
     @Override
