@@ -14,7 +14,7 @@ public class DetailActivity extends AppCompatActivity {
 
     TextView title;
     TextView detail;
-    Button detailBtn;
+    Button detailBtn, recordBtn;
     ImageView imageView;
 
     ArrayList<itemFairyTale> itemList = new ArrayList<>();
@@ -31,7 +31,7 @@ public class DetailActivity extends AppCompatActivity {
         detail = (TextView) findViewById(R.id.detail);
         imageView = (ImageView) findViewById(R.id.image);
         detailBtn = (Button) findViewById(R.id.detailBtn);
-        detailBtn.setOnClickListener(onClickListener);
+        recordBtn = (Button) findViewById(R.id.recordBtn);
 
         Intent intent = getIntent();
         if (intent != null) {
@@ -43,18 +43,25 @@ public class DetailActivity extends AppCompatActivity {
         imageView.setImageResource(item.getImage());
         detail.setText(item.getExplane());
 
+
+        detailBtn.setOnClickListener(onClickListener);
+        recordBtn.setOnClickListener(onClickListener);
     }
 
-    Button.OnClickListener onClickListener = new View.OnClickListener(){
-        public void onClick(View v){
-            switch (v.getId()){
+    Button.OnClickListener onClickListener = new View.OnClickListener() {
+        public void onClick(View v) {
+            switch (v.getId()) {
                 case R.id.detailBtn:
-                    if(detail.getVisibility()==View.GONE){
+                    if (detail.getVisibility() == View.GONE) {
                         detail.setVisibility(View.VISIBLE);
-                    }else{
+                    } else {
                         detail.setVisibility(View.GONE);
                     }
                     break;
+                case R.id.recordBtn:
+                    Intent intent = new Intent(DetailActivity.this, RecordActivity.class);
+                    intent.putExtra("item",item);
+                    startActivity(intent);
             }
         }
     };

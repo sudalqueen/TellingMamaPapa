@@ -1,17 +1,22 @@
 package com.example.sudal.tellingmamapapa;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.firebase.client.Firebase;
 import com.kakao.auth.ErrorCode;
 import com.kakao.auth.ISessionCallback;
 import com.kakao.auth.Session;
@@ -40,13 +45,17 @@ import java.util.Map;
 import static com.nhn.android.naverlogin.OAuthLogin.mOAuthLoginHandler;
 
 public class LoginActivity extends AppCompatActivity {
+    final static int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 0;
+    final static int MY_PERMISSIONS_REQUEST_READ_STORAGE = 1;
+    final static int MY_PERMISSIONS_REQUEST_WRITE_STORAGE = 2;
+
     SessionCallback callback;
 
     OAuthLogin mOAuthLoginModule;
     OAuthLoginButton authLoginButton;
     Context mActivity;
-    public static OAuthLogin        mOAuthLoginInstance;
-    public Map<String,String>       mUserInfoMap;
+    public static OAuthLogin mOAuthLoginInstance;
+    public Map<String, String> mUserInfoMap;
     String TAG = "TAG";
 
     SharedPreferences sp;
@@ -56,6 +65,10 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         mActivity = this;
+
+        Firebase.setAndroidContext(this);
+
+        checkPermission(LoginActivity.this);
 
         sp = getSharedPreferences("login", Activity.MODE_PRIVATE);
 
@@ -79,7 +92,7 @@ public class LoginActivity extends AppCompatActivity {
 
     }
 
-    private  void initNaver(){
+    private void initNaver() {
         //Naver Init
         mOAuthLoginInstance = OAuthLogin.getInstance();
         mOAuthLoginInstance.init(
@@ -102,10 +115,10 @@ public class LoginActivity extends AppCompatActivity {
                 String refreshToken = mOAuthLoginInstance.getRefreshToken(mActivity);
                 long expiresAt = mOAuthLoginInstance.getExpiresAt(mActivity);
                 String tokenType = mOAuthLoginInstance.getTokenType(mActivity);
-                Log.d(TAG,accessToken);
-                Log.d(TAG,refreshToken);
-                Log.d(TAG,String.valueOf(expiresAt));
-                Log.d(TAG,tokenType);
+                Log.d(TAG, accessToken);
+                Log.d(TAG, refreshToken);
+                Log.d(TAG, String.valueOf(expiresAt));
+                Log.d(TAG, tokenType);
                 Log.d(TAG, mOAuthLoginInstance.getState(mActivity).toString());
                 new RequestApiTask().execute();
             } else {
@@ -113,7 +126,9 @@ public class LoginActivity extends AppCompatActivity {
                 String errorDesc = mOAuthLoginInstance.getLastErrorDesc(mActivity);
                 Toast.makeText(mActivity, "errorCode:" + errorCode + ", errorDesc:" + errorDesc, Toast.LENGTH_SHORT).show();
             }
-        };
+        }
+
+        ;
     };
 
 
@@ -142,7 +157,8 @@ public class LoginActivity extends AppCompatActivity {
 
         }
     }
-    private Map<String,String> requestNaverUserInfo(String data) { // xml 파싱
+
+    private Map<String, String> requestNaverUserInfo(String data) { // xml 파싱
         String f_array[] = new String[9];
 
         try {
@@ -206,16 +222,16 @@ public class LoginActivity extends AppCompatActivity {
         } catch (Exception e) {
             Log.e("dd", "Error in network call", e);
         }
-        Map<String,String> resultMap = new HashMap<>();
-        resultMap.put("email"           ,f_array[0]);
-        resultMap.put("nickname"        ,f_array[1]);
-        resultMap.put("enc_id"          ,f_array[2]);
-        resultMap.put("profile_image"   ,f_array[3]);
-        resultMap.put("age"             ,f_array[4]);
-        resultMap.put("gender"          ,f_array[5]);
-        resultMap.put("id"              ,f_array[6]);
-        resultMap.put("name"            ,f_array[7]);
-        resultMap.put("birthday"        ,f_array[8]);
+        Map<String, String> resultMap = new HashMap<>();
+        resultMap.put("email", f_array[0]);
+        resultMap.put("nickname", f_array[1]);
+        resultMap.put("enc_id", f_array[2]);
+        resultMap.put("profile_image", f_array[3]);
+        resultMap.put("age", f_array[4]);
+        resultMap.put("gender", f_array[5]);
+        resultMap.put("id", f_array[6]);
+        resultMap.put("name", f_array[7]);
+        resultMap.put("birthday", f_array[8]);
         return resultMap;
     }
 
@@ -273,4 +289,64 @@ public class LoginActivity extends AppCompatActivity {
 
         }
     }
+
+    public void checkPermission(Activity activity) {
+        if (ContextCompat.checkSelfPermission(activity, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(activity,
+                    Manifest.permission.READ_EXTERNAL_STORAGE)) {
+            } else {
+                ActivityCompat.requestPermissions(activity,
+                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                        MY_PERMISSIONS_REQUEST_READ_STORAGE);
+            }
+        }
+        if (ContextCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(activity,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+            } else {
+                ActivityCompat.requestPermissions(activity,
+                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        MY_PERMISSIONS_REQUEST_WRITE_STORAGE);
+            }
+        }
+        if (ContextCompat.checkSelfPermission(LoginActivity.this,
+                Manifest.permission.RECORD_AUDIO)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(LoginActivity.this,
+                    new String[]{Manifest.permission.RECORD_AUDIO},
+                    1234);
+        }
+
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case MY_PERMISSIONS_REQUEST_READ_CONTACTS: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                } else {
+                    Log.d("TAG", "permission denied by user");
+                }
+                return;
+            }
+            case MY_PERMISSIONS_REQUEST_READ_STORAGE: {
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                } else {
+                    Log.d("TAG", "permission denied by user");
+                }
+            }
+            case MY_PERMISSIONS_REQUEST_WRITE_STORAGE: {
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                } else {
+                    Log.d("TAG", "permission denied by user");
+                }
+            }
+        }
+    }
+
 }
