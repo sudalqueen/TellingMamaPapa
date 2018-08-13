@@ -38,6 +38,7 @@ dependencies {
     //noinspection GradleCompatible
     implementation 'com.android.support:recyclerview-v7:28.+'
     implementation 'com.firebase:firebase-client-android:2.4.1+'
+
 }
 
 apply plugin: 'com.google.gms.google-services'

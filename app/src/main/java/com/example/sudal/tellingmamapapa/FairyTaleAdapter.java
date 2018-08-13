@@ -61,6 +61,10 @@ public class FairyTaleAdapter extends RecyclerView.Adapter<FairyTaleAdapter.Item
         return itemList.size();
     }
 
+    public void clear(){
+        itemList.clear();
+    }
+
     class ItemViewHolder extends RecyclerView.ViewHolder {
         private ImageView img;
         private TextView title;

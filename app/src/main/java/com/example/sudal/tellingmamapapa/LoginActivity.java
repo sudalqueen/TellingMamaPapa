@@ -17,6 +17,9 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import com.firebase.client.Firebase;
+import com.firebase.client.Query;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.kakao.auth.ErrorCode;
 import com.kakao.auth.ISessionCallback;
 import com.kakao.auth.Session;
@@ -41,10 +44,16 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.StringTokenizer;
 
 import static com.nhn.android.naverlogin.OAuthLogin.mOAuthLoginHandler;
 
 public class LoginActivity extends AppCompatActivity {
+    public static final String FIREBASE_POST_URL = "https://tellingmamapapa.firebaseio.com/tellingmamapapa";
+    private FirebaseDatabase firebaseDatabase;
+    private DatabaseReference databaseReference;
+    private Query mRef;
+
     final static int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 0;
     final static int MY_PERMISSIONS_REQUEST_READ_STORAGE = 1;
     final static int MY_PERMISSIONS_REQUEST_WRITE_STORAGE = 2;
@@ -58,6 +67,8 @@ public class LoginActivity extends AppCompatActivity {
     public Map<String, String> mUserInfoMap;
     String TAG = "TAG";
 
+    Users users;
+
     SharedPreferences sp;
 
     @Override
@@ -67,6 +78,8 @@ public class LoginActivity extends AppCompatActivity {
         mActivity = this;
 
         Firebase.setAndroidContext(this);
+        firebaseDatabase = FirebaseDatabase.getInstance();
+        databaseReference = firebaseDatabase.getReference();
 
         checkPermission(LoginActivity.this);
 
@@ -89,19 +102,6 @@ public class LoginActivity extends AppCompatActivity {
                 mOAuthLoginInstance.startOauthLoginActivity(LoginActivity.this, mOAuthLoginHandler);
             }
         });
-
-    }
-
-    private void initNaver() {
-        //Naver Init
-        mOAuthLoginInstance = OAuthLogin.getInstance();
-        mOAuthLoginInstance.init(
-                LoginActivity.this
-                , "peui2PNZcPRCZ9EKHrkG"
-                , "a6J0EyubwY"
-                , "TellingMamaPapa"
-        );
-
     }
 
     /**
@@ -222,16 +222,25 @@ public class LoginActivity extends AppCompatActivity {
         } catch (Exception e) {
             Log.e("dd", "Error in network call", e);
         }
+        for (int i = 0; i < f_array.length; i++) {
+            System.out.println(i + ":" + f_array[i]);
+        }
+
         Map<String, String> resultMap = new HashMap<>();
-        resultMap.put("email", f_array[0]);
         resultMap.put("nickname", f_array[1]);
-        resultMap.put("enc_id", f_array[2]);
-        resultMap.put("profile_image", f_array[3]);
-        resultMap.put("age", f_array[4]);
-        resultMap.put("gender", f_array[5]);
-        resultMap.put("id", f_array[6]);
-        resultMap.put("name", f_array[7]);
-        resultMap.put("birthday", f_array[8]);
+        resultMap.put("enc_id", f_array[0]);
+        resultMap.put("profile_image", f_array[2]);
+        resultMap.put("email", f_array[3]);
+        resultMap.put("name", f_array[4]);
+
+        StringTokenizer st = new StringTokenizer(f_array[3], ".");
+        String id = st.nextToken();
+        StringTokenizer st2 = new StringTokenizer(id,"@");
+        String realId = st2.nextToken();
+
+        users = new Users(realId, f_array[3], f_array[4]);
+        databaseReference.child("Users").child(id).setValue(users);
+
         return resultMap;
     }
 
