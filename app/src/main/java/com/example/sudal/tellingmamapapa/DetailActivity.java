@@ -59,11 +59,17 @@ public class DetailActivity extends AppCompatActivity {
                     }
                     break;
                 case R.id.recordBtn:
-                    Intent intent = new Intent(DetailActivity.this, RecordActivity.class);
+                    Intent intent = new Intent(DetailActivity.this, Record2WavActivity.class);
                     intent.putExtra("item",item);
                     startActivity(intent);
             }
         }
     };
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        finish();
+    }
 
 }

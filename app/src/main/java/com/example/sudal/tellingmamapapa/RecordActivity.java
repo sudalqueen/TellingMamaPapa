@@ -6,8 +6,10 @@ import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.media.AudioTrack;
 import android.media.MediaRecorder;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -15,7 +17,15 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.storage.FileDownloadTask;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+
 import java.io.DataInputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -23,6 +33,9 @@ import java.io.IOException;
 
 public class RecordActivity extends AppCompatActivity {
     private static final String TAG = "RecordActivity";
+
+    StorageReference storageRef;
+    StorageReference audioRef;
 
     private int mAudioSource = MediaRecorder.AudioSource.MIC;
     private int mSampleRate = 44100;
@@ -47,6 +60,8 @@ public class RecordActivity extends AppCompatActivity {
 
     public String mFilePath = null;
 
+    String id, fairyName;
+
     itemFairyTale item;
 
     @Override
@@ -54,14 +69,16 @@ public class RecordActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_record);
 
-        recordBtn = (Button)findViewById(R.id.recordBtn);
-        playBtn = (Button)findViewById(R.id.playBtn);
+        storageRef = FirebaseStorage.getInstance().getReference();
+
+        recordBtn = (Button) findViewById(R.id.recordBtn);
+        playBtn = (Button) findViewById(R.id.playBtn);
 
         title = (TextView) findViewById(R.id.title);
         imageview = (ImageView) findViewById(R.id.image);
 
         Intent intent = getIntent();
-        if(intent!=null){
+        if (intent != null) {
             item = (itemFairyTale) intent.getSerializableExtra("item");
         }
 
@@ -77,22 +94,22 @@ public class RecordActivity extends AppCompatActivity {
             @Override
             public void run() {
                 byte[] readData = new byte[mBufferSize];
-                mFilePath = Environment.getExternalStorageDirectory().getAbsolutePath() +"/record.pcm";
+                mFilePath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/record.pcm";
                 FileOutputStream fos = null;
                 try {
                     fos = new FileOutputStream(mFilePath);
-                } catch(FileNotFoundException e) {
-                    Log.e("error!!!!!!111","fos 정의가 안됌");
+                } catch (FileNotFoundException e) {
+                    Log.e("error!!!!!!111", "fos 정의가 안됌");
                     e.printStackTrace();
                 }
 
-                while(isRecording) {
+                while (isRecording) {
                     int ret = mAudioRecord.read(readData, 0, mBufferSize);
                     Log.d(TAG, "read bytes is " + ret);
 
                     try {
                         fos.write(readData, 0, mBufferSize);
-                    }catch (IOException e){
+                    } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
@@ -109,23 +126,58 @@ public class RecordActivity extends AppCompatActivity {
             }
         });
 
+        id = "abbey17";
+        fairyName = "temp";
+        String index = "0";
+        audioRef = storageRef.child("audio/" + id + "/" + fairyName + index + ".pcm");
+        UploadTask uploadTask = audioRef.putFile(Uri.parse(mFilePath));
+        uploadTask.addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+
+            }
+        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+
+            }
+        });
+
         mPlayThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 byte[] writeData = new byte[mBufferSize];
                 FileInputStream fis = null;
+
                 try {
                     fis = new FileInputStream(mFilePath);
-                }catch (FileNotFoundException e) {
+                } catch (FileNotFoundException e) {
                     e.printStackTrace();
                 }
 
                 DataInputStream dis = new DataInputStream(fis);
                 mAudioTrack.play();
 
-                while(isPlaying) {
+                while (isPlaying) {
                     try {
-                        int ret = dis.read(writeData, 0, mBufferSize);
+//                        int ret = dis.read(writeData, 0, mBufferSize);
+                        int ret = 0;
+                        id = "abbey17";
+                        fairyName = "temp";
+                        String index = "0";
+                        audioRef = storageRef.child("audio/" + id + "/" + fairyName + index + ".pcm");
+                        audioRef.getBytes(ret).addOnSuccessListener(new OnSuccessListener<byte[]>() {
+                            @Override
+                            public void onSuccess(byte[] bytes) {
+
+                            }
+                        }).addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+
+                            }
+                        });
+
                         if (ret <= 0) {
                             (RecordActivity.this).runOnUiThread(new Runnable() {
                                 @Override
@@ -138,7 +190,7 @@ public class RecordActivity extends AppCompatActivity {
                             break;
                         }
                         mAudioTrack.write(writeData, 0, ret);
-                    }catch (IOException e) {
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
 
@@ -150,7 +202,7 @@ public class RecordActivity extends AppCompatActivity {
                 try {
                     dis.close();
                     fis.close();
-                }catch (IOException e) {
+                } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
@@ -158,16 +210,15 @@ public class RecordActivity extends AppCompatActivity {
     }
 
     public void onRecord(View view) {
-        if(isRecording == true) {
+        if (isRecording == true) {
             isRecording = false;
             recordBtn.setText("Record");
-        }
-        else {
+        } else {
             isRecording = true;
             recordBtn.setText("Stop");
 
-            if(mAudioRecord == null) {
-                mAudioRecord =  new AudioRecord(mAudioSource, mSampleRate, mChannelCount, mAudioFormat, mBufferSize);
+            if (mAudioRecord == null) {
+                mAudioRecord = new AudioRecord(mAudioSource, mSampleRate, mChannelCount, mAudioFormat, mBufferSize);
                 mAudioRecord.startRecording();
             }
             mRecordThread.start();
@@ -176,19 +227,17 @@ public class RecordActivity extends AppCompatActivity {
     }
 
     public void onPlay(View view) {
-        if(isPlaying == true) {
+        if (isPlaying == true) {
             isPlaying = false;
             playBtn.setText("Play");
-        }
-        else {
+        } else {
             isPlaying = true;
             playBtn.setText("Stop");
 
-            if(mAudioTrack == null) {
+            if (mAudioTrack == null) {
                 mAudioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, mSampleRate, mChannelCount, mAudioFormat, mBufferSize, AudioTrack.MODE_STREAM);
             }
             mPlayThread.start();
         }
-
     }
 }
