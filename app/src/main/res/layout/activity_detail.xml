@@ -2,24 +2,39 @@
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="#ffffff">
+
+    <ImageView
+        android:id="@+id/backgoundLogo"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="200dp"
+        android:scaleType="fitXY"
+        android:src="@drawable/logoback"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="10dp"
+        android:gravity="center"
         android:text="제목"
         android:textSize="20sp"
-        android:gravity="center"
-        app:layout_constraintBottom_toTopOf="@+id/image"/>
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/image" />
 
     <Button
         android:id="@+id/prevBtn"
         android:layout_width="40dp"
-        android:layout_height="50dp"
+        android:layout_height="40dp"
+        android:background="@drawable/left"
         android:gravity="center_vertical"
-        android:text="전"
         app:layout_constraintBottom_toBottomOf="@id/image"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@id/image" />
@@ -27,10 +42,10 @@
     <Button
         android:id="@+id/nextBtn"
         android:layout_width="40dp"
-        android:layout_height="50dp"
+        android:layout_height="40dp"
         android:layout_marginLeft="10dp"
+        android:background="@drawable/right"
         android:gravity="center_vertical"
-        android:text="후"
         app:layout_constraintBottom_toBottomOf="@id/image"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/image" />
@@ -41,9 +56,10 @@
         android:layout_height="0dp"
         android:layout_marginEnd="40dp"
         android:layout_marginStart="40dp"
-        android:layout_marginTop="40dp"
-        android:scaleType="fitXY"
+        android:layout_marginTop="100dp"
         android:src="@drawable/cat1"
+        android:background="@drawable/round"
+        android:scaleType="fitXY"
         app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -51,68 +67,68 @@
 
     <LinearLayout
         android:id="@+id/linearLayout"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="@id/image"
         app:layout_constraintStart_toStartOf="@id/image"
         app:layout_constraintTop_toBottomOf="@id/image">
 
-        <TextView
+        <Button
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.7"
-            android:text="조회수" />
-
-        <TextView
-            android:id="@+id/watchNum"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.5"
-            android:text="33" />
+            android:layout_height="45dp"
+            android:layout_margin="3dp"
+            android:layout_weight="1"
+            android:background="@drawable/hits" />
 
         <Button
             android:id="@+id/likeBtn"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="45dp"
+            android:layout_margin="3dp"
             android:layout_weight="1"
-            android:text="좋아요" />
+            android:background="@drawable/like" />
 
         <Button
             android:id="@+id/starBtn"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="45dp"
+            android:layout_margin="3dp"
             android:layout_weight="1"
-            android:text="담기" />
+            android:background="@drawable/star" />
 
         <Button
             android:id="@+id/recordBtn"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="45dp"
+            android:layout_margin="3dp"
             android:layout_weight="1"
-            android:text="녹음하기" />
+            android:background="@drawable/record" />
 
     </LinearLayout>
 
     <Button
         android:id="@+id/detailBtn"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="30dp"
         android:layout_marginEnd="30dp"
         android:layout_marginStart="30dp"
         android:layout_marginTop="10dp"
-        android:text="더 보기(줄거리 등)"
+        android:background="@drawable/more"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/linearLayout" />
 
     <TextView
         android:id="@+id/detail"
-        android:visibility="gone"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginEnd="30dp"
         android:layout_marginStart="30dp"
+        android:background="@drawable/dot"
+        android:padding="10dp"
         android:text="고양이의 신명나는 모험기! 당신도 이 책만 본다면 고양이 전문가! 블라블라블라!"
+        android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/detailBtn" />

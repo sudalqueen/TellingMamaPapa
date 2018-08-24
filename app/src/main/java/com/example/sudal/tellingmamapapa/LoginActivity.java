@@ -13,7 +13,6 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.Toast;
 
 import com.firebase.client.Firebase;
@@ -32,21 +31,15 @@ import com.nhn.android.naverlogin.OAuthLogin;
 import com.nhn.android.naverlogin.OAuthLoginHandler;
 import com.nhn.android.naverlogin.ui.view.OAuthLoginButton;
 
-import org.json.JSONObject;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-import static com.nhn.android.naverlogin.OAuthLogin.mOAuthLoginHandler;
 
 public class LoginActivity extends AppCompatActivity {
     public static final String FIREBASE_POST_URL = "https://tellingmamapapa.firebaseio.com/tellingmamapapa";
@@ -69,7 +62,9 @@ public class LoginActivity extends AppCompatActivity {
 
     Users users;
 
-    SharedPreferences sp;
+    SharedPreferences pref;
+
+    Intent intent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,7 +78,7 @@ public class LoginActivity extends AppCompatActivity {
 
         checkPermission(LoginActivity.this);
 
-        sp = getSharedPreferences("login", Activity.MODE_PRIVATE);
+        pref = getSharedPreferences("login", Activity.MODE_PRIVATE);
 
         callback = new SessionCallback();
         Session.getCurrentSession().addCallback(callback);
@@ -143,7 +138,12 @@ public class LoginActivity extends AppCompatActivity {
             String url = "https://openapi.naver.com/v1/nid/getUserProfile.xml";
             String at = mOAuthLoginInstance.getAccessToken(mActivity);
             mUserInfoMap = requestNaverUserInfo(mOAuthLoginInstance.requestApi(mActivity, at, url));
-            startActivity(new Intent(LoginActivity.this, MainActivity.class));
+            intent = new Intent(LoginActivity.this,MainActivity.class);
+            SharedPreferences.Editor editor = pref.edit();
+            editor.putString("id",users.getId());
+            editor.putString("email",users.getEmail());
+            intent.putExtra("User",users);
+            startActivity(intent);
             return null;
         }
 
@@ -152,9 +152,7 @@ public class LoginActivity extends AppCompatActivity {
                 Toast.makeText(mActivity, "로그인 실패하였습니다.  잠시후 다시 시도해 주세요!!", Toast.LENGTH_SHORT).show();
             } else {
                 Log.d(TAG, String.valueOf(mUserInfoMap));
-
             }
-
         }
     }
 

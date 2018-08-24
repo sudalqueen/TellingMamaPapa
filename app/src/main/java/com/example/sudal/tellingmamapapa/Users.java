@@ -1,6 +1,8 @@
 package com.example.sudal.tellingmamapapa;
 
-public class Users {
+import java.io.Serializable;
+
+public class Users implements Serializable {
     String id;
     String email;
     String gender;

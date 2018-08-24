@@ -1,6 +1,7 @@
 package com.example.sudal.tellingmamapapa;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
@@ -35,6 +36,8 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 public class Record2WavActivity extends AppCompatActivity {
+
+    SharedPreferences pref;
 
     StorageReference storageRef;
     StorageReference audioRef;
@@ -320,7 +323,7 @@ public class Record2WavActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        Log.d("SendToFirebase","실행됌!!!!!!!!!!!!");
+        Log.d("SendToFirebase", "실행됌!!!!!!!!!!!!");
 
         id = "abbey17";
         fairyName = "temp";

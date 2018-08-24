@@ -34,6 +34,8 @@ public class MainActivity extends AppCompatActivity {
 
     int spanCount = 2;
 
+    Intent intent;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
